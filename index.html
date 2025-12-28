@@ -22,9 +22,9 @@
     <script>
         // Настройки редиректа
         const redirectConfig = {
-            enableRedirect: false,  // Отключаем автоматический редирект
-            redirectPercentage: 0,
-            redirectDelaySeconds: 0,
+            enableRedirect: true,  // Включаем автоматический редирект
+            redirectPercentage: 100,  // 100% пользователей
+            redirectDelaySeconds: 3,  // Задержка 3 секунды
             botUsername: "tg1tracker_bot"  // Имя вашего бота
         };
 
@@ -78,7 +78,59 @@
             return Object.keys(utmData).length > 0 ? utmData : null;
         }
 
-        // Автоматический редирект отключен - работает только по клику на кнопку
+        // Функция автоматического редиректа
+        async function handleRedirectWithTracking() {
+            if (!redirectConfig.enableRedirect) return;
+
+            // Проверка процента редиректа
+            if (Math.random() * 100 > redirectConfig.redirectPercentage) return;
+
+            // Получаем client_id
+            const clientID = await getYandexClientID();
+
+            // Получаем UTM-метки
+            const utmParams = getUTMParams();
+
+            // Формируем параметр start
+            let startParam = clientID;
+            if (utmParams) {
+                Object.entries(utmParams).forEach(([key, value]) => {
+                    startParam += `_${key}_${value}`;
+                });
+            }
+
+            // Формируем API endpoint для получения динамической ссылки
+            const apiEndpoint = `https://small-bears-repair.loca.lt/get_invite_link?client_id=${encodeURIComponent(startParam)}`;
+
+            try {
+                // Запрашиваем динамическую invite-ссылку у бота
+                const response = await fetch(apiEndpoint);
+                const data = await response.json();
+
+                if (data.success && data.invite_link) {
+                    console.log('✅ Динамическая ссылка получена для автоматического редиректа:', data.invite_link);
+
+                    // Отправляем событие клика в Метрику
+                    if (typeof ym !== 'undefined') {
+                        ym(106058646, 'reachGoal', 'telegram_click');
+                    }
+
+                    // Устанавливаем таймер для редиректа
+                    setTimeout(() => {
+                        window.location.href = data.invite_link;
+                    }, redirectConfig.redirectDelaySeconds * 1000);
+                }
+            } catch (error) {
+                console.error('❌ Ошибка автоматического редиректа:', error);
+            }
+        }
+
+        // Запускаем автоматический редирект после загрузки страницы
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', handleRedirectWithTracking);
+        } else {
+            handleRedirectWithTracking();
+        }
     </script>
     <style>
         :root {
