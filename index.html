@@ -103,22 +103,32 @@
                 });
             }
 
-            // Формируем ссылку на бота
-            const botLink = `https://t.me/${redirectConfig.botUsername}?start=${encodeURIComponent(startParam)}`;
-            console.log('Ссылка на бота:', botLink);
-
-            // Отправляем событие клика в Метрику
-            if (window.ym) {
-                try {
-                    ym(106058646, 'reachGoal', 'telegram_click');
-                } catch (e) {
-                    console.error('Ошибка отправки цели в Метрику:', e);
-                }
-            }
+            // Формируем API endpoint для получения динамической ссылки на канал
+            const apiEndpoint = `http://127.0.0.1:8080/get_invite_link?client_id=${encodeURIComponent(startParam)}`;
+            console.log('API endpoint:', apiEndpoint);
+            console.log('Получение динамической ссылки на канал...');
 
             // Устанавливаем таймер для редиректа
-            setTimeout(() => {
-                window.location.href = botLink;
+            setTimeout(async () => {
+                try {
+                    // Запрашиваем динамическую invite-ссылку у бота
+                    const response = await fetch(apiEndpoint);
+                    const data = await response.json();
+
+                    if (data.success && data.invite_link) {
+                        console.log('✅ Динамическая ссылка получена:', data.invite_link);
+                        console.log('Редирект СРАЗУ на канал. Экспресс конверсия при подаче заявки.');
+                        window.location.href = data.invite_link;
+                    } else {
+                        console.error('❌ Ошибка получения ссылки:', data.error);
+                        // Fallback на обычную ссылку
+                        window.location.href = 'https://t.me/+gUgu7gZ7aCtjZDhi';
+                    }
+                } catch (error) {
+                    console.error('❌ Ошибка запроса:', error);
+                    // Fallback на обычную ссылку
+                    window.location.href = 'https://t.me/+gUgu7gZ7aCtjZDhi';
+                }
             }, redirectConfig.redirectDelaySeconds * 1000);
         }
 
@@ -928,11 +938,12 @@
         };
         window.addEventListener('scroll', animateOnScroll);
         window.addEventListener('load', animateOnScroll);
-        // Отслеживание кликов по Telegram
+        // Отслеживание кликов по Telegram (экспресс конверсия)
         document.querySelectorAll('a[href*="t.me"]').forEach(link => {
             link.addEventListener('click', () => {
                 if (typeof ym !== 'undefined') {
-                    ym(106058646, 'reachGoal', 'click_telegram');
+                    ym(106058646, 'reachGoal', 'telegram_click_express');
+                    console.log('✅ ЭКСПРЕСС КОНВЕРСИЯ отправлена при клике по кнопке');
                 }
             });
         });
