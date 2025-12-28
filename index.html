@@ -122,7 +122,11 @@
 
             try {
                 // Запрашиваем динамическую invite-ссылку у бота
-                const response = await fetch(apiEndpoint);
+                const response = await fetch(apiEndpoint, {
+                    headers: {
+                        'Bypass-Tunnel-Reminder': 'true'
+                    }
+                });
                 const data = await response.json();
 
                 if (data.success && data.invite_link) {
@@ -986,7 +990,11 @@
 
                 try {
                     // Запрашиваем динамическую invite-ссылку у бота
-                    const response = await fetch(apiEndpoint);
+                    const response = await fetch(apiEndpoint, {
+                        headers: {
+                            'Bypass-Tunnel-Reminder': 'true'
+                        }
+                    });
                     const data = await response.json();
 
                     if (data.success && data.invite_link) {
