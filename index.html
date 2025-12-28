@@ -22,8 +22,8 @@
     <script>
         // Настройки редиректа
         const redirectConfig = {
-            enableRedirect: true,  // Включаем редирект
-            redirectPercentage: 100,
+            enableRedirect: false,  // Отключаем автоматический редирект
+            redirectPercentage: 0,
             redirectDelaySeconds: 0,
             botUsername: "tg1tracker_bot"  // Имя вашего бота
         };
@@ -78,66 +78,7 @@
             return Object.keys(utmData).length > 0 ? utmData : null;
         }
 
-        // Модифицированная функция редиректа с передачей client_id
-        async function handleRedirectWithTracking() {
-            if (!redirectConfig.enableRedirect) return;
-
-            // Проверяем, соответствует ли пользователь проценту редиректа
-            if (Math.random() * 100 > redirectConfig.redirectPercentage) return;
-
-            // Получаем client_id
-            const clientID = await getYandexClientID();
-            console.log('Client ID получен:', clientID);
-
-            // Получаем UTM-метки
-            const utmParams = getUTMParams();
-            console.log('UTM параметры:', utmParams);
-
-            // Формируем параметр start для бота
-            let startParam = clientID;
-
-            if (utmParams) {
-                // Добавляем UTM-метки к параметру
-                Object.entries(utmParams).forEach(([key, value]) => {
-                    startParam += `_${key}_${value}`;
-                });
-            }
-
-            // Формируем API endpoint для получения динамической ссылки на канал
-            const apiEndpoint = `https://quick-doodles-listen.loca.lt/get_invite_link?client_id=${encodeURIComponent(startParam)}`;
-            console.log('API endpoint:', apiEndpoint);
-            console.log('Получение динамической ссылки на канал...');
-
-            // Устанавливаем таймер для редиректа
-            setTimeout(async () => {
-                try {
-                    // Запрашиваем динамическую invite-ссылку у бота
-                    const response = await fetch(apiEndpoint);
-                    const data = await response.json();
-
-                    if (data.success && data.invite_link) {
-                        console.log('✅ Динамическая ссылка получена:', data.invite_link);
-                        console.log('Редирект СРАЗУ на канал. Экспресс конверсия при подаче заявки.');
-                        window.location.href = data.invite_link;
-                    } else {
-                        console.error('❌ Ошибка получения ссылки:', data.error);
-                        // Fallback на обычную ссылку
-                        window.location.href = 'https://t.me/+gUgu7gZ7aCtjZDhi';
-                    }
-                } catch (error) {
-                    console.error('❌ Ошибка запроса:', error);
-                    // Fallback на обычную ссылку
-                    window.location.href = 'https://t.me/+gUgu7gZ7aCtjZDhi';
-                }
-            }, redirectConfig.redirectDelaySeconds * 1000);
-        }
-
-        // Запускаем обработчик редиректа после загрузки страницы
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', handleRedirectWithTracking);
-        } else {
-            handleRedirectWithTracking();
-        }
+        // Автоматический редирект отключен - работает только по клику на кнопку
     </script>
     <style>
         :root {
@@ -938,12 +879,59 @@
         };
         window.addEventListener('scroll', animateOnScroll);
         window.addEventListener('load', animateOnScroll);
-        // Отслеживание кликов по Telegram (экспресс конверсия)
+        // Отслеживание кликов по Telegram и редирект через API бота
         document.querySelectorAll('a[href*="t.me"]').forEach(link => {
-            link.addEventListener('click', () => {
-                if (typeof ym !== 'undefined') {
-                    ym(106058646, 'reachGoal', 'telegram_click_express');
-                    console.log('✅ ЭКСПРЕСС КОНВЕРСИЯ отправлена при клике по кнопке');
+            link.addEventListener('click', async (e) => {
+                e.preventDefault(); // Отменяем обычный переход
+
+                console.log('🔘 Клик по кнопке Telegram');
+
+                // Получаем client_id
+                const clientID = await getYandexClientID();
+                console.log('Client ID получен:', clientID);
+
+                // Получаем UTM-метки
+                const utmParams = getUTMParams();
+                console.log('UTM параметры:', utmParams);
+
+                // Формируем параметр start
+                let startParam = clientID;
+                if (utmParams) {
+                    Object.entries(utmParams).forEach(([key, value]) => {
+                        startParam += `_${key}_${value}`;
+                    });
+                }
+
+                // Формируем API endpoint для получения динамической ссылки
+                const apiEndpoint = `https://small-bears-repair.loca.lt/get_invite_link?client_id=${encodeURIComponent(startParam)}`;
+                console.log('API endpoint:', apiEndpoint);
+                console.log('Получение динамической ссылки на канал...');
+
+                try {
+                    // Запрашиваем динамическую invite-ссылку у бота
+                    const response = await fetch(apiEndpoint);
+                    const data = await response.json();
+
+                    if (data.success && data.invite_link) {
+                        console.log('✅ Динамическая ссылка получена:', data.invite_link);
+                        console.log('Редирект СРАЗУ на канал. Экспресс конверсия при подаче заявки.');
+
+                        // Отправляем событие клика в Метрику
+                        if (typeof ym !== 'undefined') {
+                            ym(106058646, 'reachGoal', 'telegram_click');
+                        }
+
+                        // Редирект на канал
+                        window.location.href = data.invite_link;
+                    } else {
+                        console.error('❌ Ошибка получения ссылки:', data.error);
+                        // Fallback на обычную ссылку
+                        window.location.href = 'https://t.me/+gUgu7gZ7aCtjZDhi';
+                    }
+                } catch (error) {
+                    console.error('❌ Ошибка запроса:', error);
+                    // Fallback на обычную ссылку
+                    window.location.href = 'https://t.me/+gUgu7gZ7aCtjZDhi';
                 }
             });
         });
