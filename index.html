@@ -22,30 +22,111 @@
     <script>
         // Настройки редиректа
         const redirectConfig = {
-            enableRedirect: false,
+            enableRedirect: true,  // Включаем редирект
             redirectPercentage: 100,
             redirectDelaySeconds: 0,
-            redirectUrl: "https://t.me/+gUgu7gZ7aCtjZDhi"
+            botUsername: "tg1tracker_bot"  // Имя вашего бота
         };
 
-        // Функция для обработки редиректа
-        function handleRedirect() {
+        // Функция для получения Яндекс.Метрика Client ID
+        async function getYandexClientID() {
+            try {
+                // Метод 1: Через API Метрики (если доступен)
+                if (window.Ya && window.Ya._metrika && window.Ya._metrika.getClientID) {
+                    return new Promise((resolve) => {
+                        try {
+                            window.Ya._metrika.getClientID(106058646, function(clientID) {
+                                resolve(clientID);
+                            });
+                        } catch (e) {
+                            resolve(null);
+                        }
+                    });
+                }
+
+                // Метод 2: Из cookie _ym_uid
+                const cookies = document.cookie.split(';');
+                for (let cookie of cookies) {
+                    const [name, value] = cookie.trim().split('=');
+                    if (name === '_ym_uid') {
+                        return value;
+                    }
+                }
+
+                // Метод 3: Генерация временного ID
+                const tempID = Date.now() + '' + Math.floor(Math.random() * 1000000);
+                return tempID;
+            } catch (e) {
+                console.error('Ошибка получения Client ID:', e);
+                const tempID = Date.now() + '' + Math.floor(Math.random() * 1000000);
+                return tempID;
+            }
+        }
+
+        // Функция для извлечения UTM-меток из URL
+        function getUTMParams() {
+            const params = new URLSearchParams(window.location.search);
+            const utmData = {};
+
+            ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term'].forEach(param => {
+                const value = params.get(param);
+                if (value) {
+                    utmData[param] = value;
+                }
+            });
+
+            return Object.keys(utmData).length > 0 ? utmData : null;
+        }
+
+        // Модифицированная функция редиректа с передачей client_id
+        async function handleRedirectWithTracking() {
             if (!redirectConfig.enableRedirect) return;
 
             // Проверяем, соответствует ли пользователь проценту редиректа
             if (Math.random() * 100 > redirectConfig.redirectPercentage) return;
 
+            // Получаем client_id
+            const clientID = await getYandexClientID();
+            console.log('Client ID получен:', clientID);
+
+            // Получаем UTM-метки
+            const utmParams = getUTMParams();
+            console.log('UTM параметры:', utmParams);
+
+            // Формируем параметр start для бота
+            let startParam = clientID;
+
+            if (utmParams) {
+                // Добавляем UTM-метки к параметру
+                Object.entries(utmParams).forEach(([key, value]) => {
+                    startParam += `_${key}_${value}`;
+                });
+            }
+
+            // Формируем ссылку на бота
+            const botLink = `https://t.me/${redirectConfig.botUsername}?start=${encodeURIComponent(startParam)}`;
+            console.log('Ссылка на бота:', botLink);
+
+            // Отправляем событие клика в Метрику
+            if (window.ym) {
+                try {
+                    ym(106058646, 'reachGoal', 'telegram_click');
+                } catch (e) {
+                    console.error('Ошибка отправки цели в Метрику:', e);
+                }
+            }
+
             // Устанавливаем таймер для редиректа
             setTimeout(() => {
-                window.location.href = redirectConfig.redirectUrl;
+                window.location.href = botLink;
             }, redirectConfig.redirectDelaySeconds * 1000);
         }
 
         // Запускаем обработчик редиректа после загрузки страницы
         if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', handleRedirect);
+            document.addEventListener('DOMContentLoaded', handleRedirectWithTracking);
         } else {
-            handleRedirect();
+            handleRedirectWithTracking();
         }
     </script>
     <style>
@@ -770,12 +851,12 @@
             <p>Связаться с нами по вопросам конфиденциальности можно по адресу: info@pp-menu.ru или +7 (495) 123-45-67.</p>
         </div>
     </div>
-    <!-- Яндекс.Метрика (ID: 99680082) -->
+    <!-- Яндекс.Метрика (ID: 106058646) -->
     <script type="text/javascript">
         (function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
         m[i].l=1*new Date();k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)})
         (window, document, "script", "https://mc.yandex.ru/metrika/tag.js", "ym");
-        ym(99680082, "init", {
+        ym(106058646, "init", {
             clickmap: true,
             trackLinks: true,
             accurateTrackBounce: true,
@@ -784,7 +865,7 @@
     </script>
     <noscript>
         <div>
-            <img src="https://mc.yandex.ru/watch/99680082" style="position:absolute; left:-9999px;" alt="" />
+            <img src="https://mc.yandex.ru/watch/106058646" style="position:absolute; left:-9999px;" alt="" />
         </div>
     </noscript>
     <!-- /Яндекс.Метрика -->
@@ -851,7 +932,7 @@
         document.querySelectorAll('a[href*="t.me"]').forEach(link => {
             link.addEventListener('click', () => {
                 if (typeof ym !== 'undefined') {
-                    ym(99680082, 'reachGoal', 'click_telegram');
+                    ym(106058646, 'reachGoal', 'click_telegram');
                 }
             });
         });
@@ -862,4 +943,3 @@
     </script>
 </body>
 </html>
-
