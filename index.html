@@ -80,13 +80,27 @@
 
         // Функция автоматического редиректа
         async function handleRedirectWithTracking() {
-            if (!redirectConfig.enableRedirect) return;
+            console.log('🚀 Запуск автоматического редиректа...');
+
+            if (!redirectConfig.enableRedirect) {
+                console.log('❌ Редирект отключен в настройках');
+                return;
+            }
+            console.log('✅ Редирект включен');
 
             // Проверка процента редиректа
-            if (Math.random() * 100 > redirectConfig.redirectPercentage) return;
+            const randomValue = Math.random() * 100;
+            console.log(`🎲 Проверка процента: ${randomValue.toFixed(2)} <= ${redirectConfig.redirectPercentage}`);
+            if (randomValue > redirectConfig.redirectPercentage) {
+                console.log('❌ Не попал в процент редиректа');
+                return;
+            }
+            console.log('✅ Попал в процент редиректа');
 
             // Получаем client_id
+            console.log('📊 Получение client_id...');
             const clientID = await getYandexClientID();
+            console.log('✅ Client ID получен:', clientID);
 
             // Получаем UTM-метки
             const utmParams = getUTMParams();
@@ -100,7 +114,11 @@
             }
 
             // Формируем API endpoint для получения динамической ссылки
-            const apiEndpoint = `https://small-bears-repair.loca.lt/get_invite_link?client_id=${encodeURIComponent(startParam)}`;
+            // Для локального теста используем localhost, для продакшена - localtunnel
+            const isLocal = window.location.protocol === 'file:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+            const apiBase = isLocal ? 'http://127.0.0.1:8080' : 'https://small-bears-repair.loca.lt';
+            const apiEndpoint = `${apiBase}/get_invite_link?client_id=${encodeURIComponent(startParam)}`;
+            console.log('🌐 API Base:', apiBase);
 
             try {
                 // Запрашиваем динамическую invite-ссылку у бота
@@ -126,10 +144,13 @@
         }
 
         // Запускаем автоматический редирект после загрузки страницы
+        // Добавляем небольшую задержку для загрузки Яндекс.Метрики
         if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', handleRedirectWithTracking);
+            document.addEventListener('DOMContentLoaded', () => {
+                setTimeout(handleRedirectWithTracking, 500); // Ждём 500мс для загрузки метрики
+            });
         } else {
-            handleRedirectWithTracking();
+            setTimeout(handleRedirectWithTracking, 500); // Ждём 500мс для загрузки метрики
         }
     </script>
     <style>
@@ -955,7 +976,11 @@
                 }
 
                 // Формируем API endpoint для получения динамической ссылки
-                const apiEndpoint = `https://small-bears-repair.loca.lt/get_invite_link?client_id=${encodeURIComponent(startParam)}`;
+                // Для локального теста используем localhost, для продакшена - localtunnel
+                const isLocal = window.location.protocol === 'file:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+                const apiBase = isLocal ? 'http://127.0.0.1:8080' : 'https://small-bears-repair.loca.lt';
+                const apiEndpoint = `${apiBase}/get_invite_link?client_id=${encodeURIComponent(startParam)}`;
+                console.log('🌐 API Base:', apiBase);
                 console.log('API endpoint:', apiEndpoint);
                 console.log('Получение динамической ссылки на канал...');
 
