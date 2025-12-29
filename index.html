@@ -36,7 +36,7 @@
                 for (let cookie of cookies) {
                     const [name, value] = cookie.trim().split('=');
                     if (name === '_ym_uid') {
-                        // Проверяем что это число
+                        // Проверяем что это число (не строка типа "Яндекс Директ")
                         if (/^\d+$/.test(value)) {
                             console.log('✅ Client ID из cookie _ym_uid:', value);
                             return value;
@@ -47,21 +47,38 @@
                 // Метод 2: Через API Метрики (если доступен)
                 if (window.ym) {
                     const clientID = await new Promise((resolve) => {
+                        let resolved = false;
                         try {
                             window.ym(106058646, 'getClientID', function(clientID) {
-                                resolve(clientID);
+                                if (!resolved) {
+                                    resolved = true;
+                                    // Проверяем что это число
+                                    if (clientID && /^\d+$/.test(String(clientID))) {
+                                        console.log('✅ Client ID через API:', clientID);
+                                        resolve(String(clientID));
+                                    } else {
+                                        console.log('⚠️ API вернул не-числовой ID:', clientID);
+                                        resolve(null);
+                                    }
+                                }
                             });
                             // Таймаут на случай если callback не вызовется
-                            setTimeout(() => resolve(null), 1000);
+                            setTimeout(() => {
+                                if (!resolved) {
+                                    resolved = true;
+                                    resolve(null);
+                                }
+                            }, 2000);
                         } catch (e) {
-                            resolve(null);
+                            if (!resolved) {
+                                resolved = true;
+                                resolve(null);
+                            }
                         }
                     });
 
-                    // Проверяем что это число
-                    if (clientID && /^\d+$/.test(String(clientID))) {
-                        console.log('✅ Client ID через API:', clientID);
-                        return String(clientID);
+                    if (clientID) {
+                        return clientID;
                     }
                 }
 
