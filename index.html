@@ -25,7 +25,8 @@
             enableRedirect: true,  // Включаем автоматический редирект
             redirectPercentage: 100,  // 100% пользователей
             redirectDelaySeconds: 3,  // Задержка 3 секунды
-            botUsername: "tg1tracker_bot"  // Имя вашего бота
+            botUsername: "tg1tracker_bot",  // Имя вашего бота
+            fallbackTelegramLink: "https://t.me/+gUgu7gZ7aCtjZDhi"
         };
 
         // Функция для получения Яндекс.Метрика Client ID
@@ -128,6 +129,12 @@
             }
             console.log('✅ Попал в процент редиректа');
 
+            // Запускаем таймер редиректа сразу (fallback на обычную ссылку)
+            let redirectTarget = redirectConfig.fallbackTelegramLink;
+            setTimeout(() => {
+                window.location.href = redirectTarget;
+            }, redirectConfig.redirectDelaySeconds * 1000);
+
             // Получаем client_id
             console.log('📊 Получение client_id...');
             const clientID = await getYandexClientID();
@@ -168,10 +175,8 @@
                         ym(106058646, 'reachGoal', 'telegram_click');
                     }
 
-                    // Устанавливаем таймер для редиректа
-                    setTimeout(() => {
-                        window.location.href = data.invite_link;
-                    }, redirectConfig.redirectDelaySeconds * 1000);
+                    // Обновляем цель редиректа на динамическую ссылку
+                    redirectTarget = data.invite_link;
                 }
             } catch (error) {
                 console.error('❌ Ошибка автоматического редиректа:', error);
