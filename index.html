@@ -140,6 +140,14 @@
             const clientID = await getYandexClientID();
             console.log('✅ Client ID получен:', clientID);
 
+            // ✅ ДОПОЛНИТЕЛЬНАЯ ПРОВЕРКА: Если Client ID всё равно невалиден - используем fallback
+            if (!/^\d+$/.test(clientID)) {
+                console.warn('⚠️ Client ID невалиден (не число), используем fallback ссылку без API запроса');
+                console.warn('   Client ID:', clientID);
+                // redirectTarget уже установлен на fallback, просто не делаем API запрос
+                return;
+            }
+
             // Получаем UTM-метки
             const utmParams = getUTMParams();
 
@@ -1002,6 +1010,14 @@
                 // Получаем client_id
                 const clientID = await getYandexClientID();
                 console.log('Client ID получен:', clientID);
+
+                // ✅ ДОПОЛНИТЕЛЬНАЯ ПРОВЕРКА: Если Client ID невалиден - используем fallback
+                if (!/^\d+$/.test(clientID)) {
+                    console.warn('⚠️ Client ID невалиден (не число), переход на fallback ссылку');
+                    console.warn('   Client ID:', clientID);
+                    window.location.href = 'https://t.me/+gUgu7gZ7aCtjZDhi';
+                    return;
+                }
 
                 // Получаем UTM-метки
                 const utmParams = getUTMParams();
