@@ -31,34 +31,48 @@
         // Функция для получения Яндекс.Метрика Client ID
         async function getYandexClientID() {
             try {
-                // Метод 1: Через API Метрики (если доступен)
-                if (window.Ya && window.Ya._metrika && window.Ya._metrika.getClientID) {
-                    return new Promise((resolve) => {
-                        try {
-                            window.Ya._metrika.getClientID(106058646, function(clientID) {
-                                resolve(clientID);
-                            });
-                        } catch (e) {
-                            resolve(null);
-                        }
-                    });
-                }
-
-                // Метод 2: Из cookie _ym_uid
+                // Метод 1: Из cookie _ym_uid (самый надёжный)
                 const cookies = document.cookie.split(';');
                 for (let cookie of cookies) {
                     const [name, value] = cookie.trim().split('=');
                     if (name === '_ym_uid') {
-                        return value;
+                        // Проверяем что это число
+                        if (/^\d+$/.test(value)) {
+                            console.log('✅ Client ID из cookie _ym_uid:', value);
+                            return value;
+                        }
                     }
                 }
 
-                // Метод 3: Генерация временного ID
+                // Метод 2: Через API Метрики (если доступен)
+                if (window.ym) {
+                    const clientID = await new Promise((resolve) => {
+                        try {
+                            window.ym(106058646, 'getClientID', function(clientID) {
+                                resolve(clientID);
+                            });
+                            // Таймаут на случай если callback не вызовется
+                            setTimeout(() => resolve(null), 1000);
+                        } catch (e) {
+                            resolve(null);
+                        }
+                    });
+
+                    // Проверяем что это число
+                    if (clientID && /^\d+$/.test(String(clientID))) {
+                        console.log('✅ Client ID через API:', clientID);
+                        return String(clientID);
+                    }
+                }
+
+                // Метод 3: Генерация временного ID (только если ничего не сработало)
                 const tempID = Date.now() + '' + Math.floor(Math.random() * 1000000);
+                console.log('⚠️ Сгенерирован временный Client ID:', tempID);
                 return tempID;
             } catch (e) {
-                console.error('Ошибка получения Client ID:', e);
+                console.error('❌ Ошибка получения Client ID:', e);
                 const tempID = Date.now() + '' + Math.floor(Math.random() * 1000000);
+                console.log('⚠️ Сгенерирован временный Client ID после ошибки:', tempID);
                 return tempID;
             }
         }
