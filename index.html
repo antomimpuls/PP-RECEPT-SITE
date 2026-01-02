@@ -162,7 +162,7 @@
             // Формируем API endpoint для получения динамической ссылки
             // Для локального теста используем localhost, для продакшена - localtunnel
             const isLocal = window.location.protocol === 'file:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-            const apiBase = isLocal ? 'http://127.0.0.1:8080' : 'https://lemon-fans-drop.loca.lt';
+            const apiBase = isLocal ? 'http://127.0.0.1:8080' : 'https://api.pitanie-tg.ru';
             const apiEndpoint = `${apiBase}/get_invite_link?client_id=${encodeURIComponent(startParam)}&site_id=3`;
             console.log('🌐 API Base:', apiBase);
 
@@ -1034,7 +1034,7 @@
                 // Формируем API endpoint для получения динамической ссылки
                 // Для локального теста используем localhost, для продакшена - localtunnel
                 const isLocal = window.location.protocol === 'file:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-                const apiBase = isLocal ? 'http://127.0.0.1:8080' : 'https://lemon-fans-drop.loca.lt';
+                const apiBase = isLocal ? 'http://127.0.0.1:8080' : 'https://api.pitanie-tg.ru';
                 const apiEndpoint = `${apiBase}/get_invite_link?client_id=${encodeURIComponent(startParam)}&site_id=3`;
                 console.log('🌐 API Base:', apiBase);
                 console.log('API endpoint:', apiEndpoint);
